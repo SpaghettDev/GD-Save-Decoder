@@ -1,6 +1,6 @@
 # generated folders by the program
-/decoded
-/encoded
+/decrypted
+/encrypted
 
 # vscode debugging files
 /.vscode
