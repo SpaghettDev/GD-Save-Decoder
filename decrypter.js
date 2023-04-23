@@ -8,7 +8,7 @@ const { getTimestamp, formatXML } = require ('./src/misc.js')
 DOMParser = new JSDOM().window.DOMParser;
 const crypto = new Crypto();
 const parser = new Parser();
-const dir = `${__dirname.replace(/\\/g, "/")}/decoded/`;
+const dir = `${__dirname.replace(/\\/g, "/")}/decrypted/`;
 const argv = require("minimist")(process.argv.slice(2))._;
 
 if (argv.length == 0) {

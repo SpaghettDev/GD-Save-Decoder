@@ -3,7 +3,7 @@ const path = require('path');
 const Crypto = require('./src/crypto.js');
 
 const crypto = new Crypto();
-const dir = `${__dirname.replace(/\\/g, "/")}/decoded/`;
+const dir = `${__dirname.replace(/\\/g, "/")}/encrypted/`;
 const argv = require("minimist")(process.argv.slice(2))._;
 
 let pathToFile = argv[0].replace(/\\/g, "/");
