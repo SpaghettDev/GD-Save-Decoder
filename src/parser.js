@@ -12,7 +12,8 @@ class ParserValidationError extends Error {
 
 class parser {
     /**
-     * Validates a XML file to ensure it's a decoded Geometry Dash data file and not some random XML file
+     * Validates a XML file to ensure it's a decoded Geometry Dash data file
+     * and not some random XML file
      * @param {XMLDocument} data the data to validate
      * 
      * @throws {ParserValidationError} if the data is not valid
@@ -26,17 +27,18 @@ class parser {
     /**
      * parse basic values
      * @param {XMLDocument} data data to parse
+     * @param {Boolean} include_unused include unused keys/values (true), or not (false)
      * 
      * @returns {Object} parsed data in the form of an object
      * */
-    parseXML(data) {
+    parseXML(data, include_unused) {
         let raw = {};
         let res = {};
 
         for (let i = 0; i < data.children.length; i += 2) {
             let keyName = data.children[i].innerHTML;
             if (Constants.keys[keyName]) keyName = Constants.keys[keyName];
-            if (keyName == "[unused]") continue;
+            if (include_unused && keyName == "[unused]") continue;
             let valueTag = data.children[i + 1];
             if (valueTag.tagName != "d") {
                 let value = this.parseValue(valueTag);
