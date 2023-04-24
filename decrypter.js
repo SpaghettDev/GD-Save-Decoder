@@ -1,9 +1,16 @@
-const { readFile, writeFileSync, existsSync, mkdirSync } = require('fs');
-const { parse: parsePath } = require('path');
-const { JSDOM } = require('jsdom');
-const Crypto = require('./src/crypto.js');
-const Parser = require('./src/parser.js');
-const { getTimestamp, formatXML } = require ('./src/misc.js')
+const {
+    readFile, writeFileSync,
+    existsSync, mkdirSync
+} = require("fs");
+const { parse: parsePath } = require("path");
+const { JSDOM } = require("jsdom");
+const { platform } = require("os");
+const Crypto = require("./src/crypto.js");
+const Parser = require("./src/parser.js");
+const {
+    getTimestamp, formatXML,
+    checkAndroidRoot
+} = require("./src/misc.js");
 
 DOMParser = new JSDOM().window.DOMParser;
 const crypto = new Crypto();
@@ -24,15 +31,27 @@ let filename = "";
 let gdSave = "";
 
 // match a file path
-if (file.match(/^(.+)(\/|\\)([^\/]+)$/mg))
+if (file.match(/^(.+)(\/|\\)([^\/]+)$/gm))
 {
     gdSave = file.replace(/\\/g, "/");
     filename = parsePath(gdSave).name;
 }
 else if (file.match(/CCGameManager|CCLocalLevels/g))
 {
-    gdSave = `${process.env.HOME || process.env.USERPROFILE}/AppData/Local/GeometryDash/${file}.dat`;
-    filename = file;
+    if (platform() == "android") {
+        console.log(
+            "It appears that you are running android, so to be able to read the GD data file, your phone must be rooted."
+        );
+        checkAndroidRoot();
+        console.log("Device is rooted! Getting Geometry Dash save file.");
+
+        gdSave = `/data/data/com.robtopx.geometryjump/${file}.dat`;
+        filename = file;
+    }
+    else {
+        gdSave = `${process.env.HOME || process.env.USERPROFILE}/AppData/Local/GeometryDash/${file}.dat`;
+        filename = file;
+    }
 }
 else throw new Error("File argument is neither a GD save filename nor a path.");
 
@@ -42,7 +61,7 @@ if (!type.match(/xml|pxml|json/i)) {
 }
 
 readFile(gdSave, 'utf8', (err, saveData) => {
-    if (err) throw new Error("GD Save File could not be found/read.");
+    if (err) throw new Error(`The file either doesn't exist or is being used by another process. (${err.code})`);
     console.log("Decoding...");
     let decoded = crypto.decrypt(saveData);
     if (!decoded) throw new Error("Could not decode file.");
@@ -64,13 +83,15 @@ readFile(gdSave, 'utf8', (err, saveData) => {
 
         case "json":
             if (!filename.match(/(CCGameManager|CCLocalLevels)(\..*)?/g)) {
-                console.log("Outputting to JSON a file other than a GD save file may have unintended side-effects, such as weird values...");
+                console.log(
+                    "Outputting to JSON a file other than a GD save file may have unintended side-effects, such as weird keys/values..."
+                );
             }
             let JSONdata = parser.parseXML(xmlData.children[0].children[0]);
 
             writeFileSync(
                 dir + `${filename}-${getTimestamp()}.json`,
-                JSON.stringify(JSONdata, null, 2),
+                JSON.stringify(JSONdata, null, '\t'),
                 'utf8'
             );
             break;

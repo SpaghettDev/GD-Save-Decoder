@@ -1,4 +1,4 @@
-const Constants = require('./constants');
+const Constants = require("./constants");
 
 /**
  * Is thrown when an XMLDocument is not a valid decoded GD data file
@@ -10,8 +10,7 @@ class ParserValidationError extends Error {
     }
 }
 
-class parser
-{
+class parser {
     /**
      * Validates a XML file to ensure it's a decoded Geometry Dash data file and not some random XML file
      * @param {XMLDocument} data the data to validate
@@ -20,7 +19,8 @@ class parser
      * @returns {void}
      */
     validateXML(data) {
-        if (!data || !data.children || !data.children.length) throw new ParserValidationError();
+        if (!data || !data.children || !data.children.length)
+            throw new ParserValidationError();
     }
 
     /**

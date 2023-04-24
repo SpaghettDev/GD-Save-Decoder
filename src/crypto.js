@@ -1,10 +1,9 @@
-const { unzipSync, gzipSync } = require('zlib');
+const { unzipSync, gzipSync } = require("zlib");
 
 /**
  * Crypto class. Houses the XOR, decrypt & encrypt functions.
  */
-class crypto
-{
+class crypto {
     /**
      * XORs a string using a key
      * @param {String} str the string to XOR
@@ -28,7 +27,8 @@ class crypto
      * @returns {Buffer|Error} the decoded data or an error
     */
     decrypt(data) {
-        if (data.startsWith('<?xml version="1.0"?>')) return data;
+        if (data.startsWith('<?xml version="1.0"?>'))
+            return data;
 
         let dexored = this.xor(data, 11);
         let decoded = Buffer.from(dexored, 'base64');

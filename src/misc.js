@@ -1,3 +1,5 @@
+const { access, constants } = require("fs");
+
 
 /**
  * Gets the current time, formatted in a neat string
@@ -5,11 +7,13 @@
  * @returns {String} formatted time
  * */
 const getTimestamp = () => {
-    const pad = (n, s=2) => (`${new Array(s).fill(0)}${n}`).slice(-s);
+    const pad = (n, s = 2) => `${new Array(s).fill(0)}${n}`.slice(-s);
     const d = new Date();
 
-    return `${pad(d.getFullYear(),4)}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
-}
+    return `${pad(d.getFullYear(), 4)}-${pad(d.getMonth() + 1)}-${
+        pad(d.getDate())
+    } ${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
+};
 
 /**
  * Formats an XMLDocument without using the XSLTProcessor class since it doesn't exist in node.js
@@ -19,7 +23,8 @@ const getTimestamp = () => {
  * @returns {String} formatted XML document
  * */
 const formatXML = (xml, tab = '\t') => {
-    var formatted = "", indent = "";
+    var formatted = "",
+        indent = "";
 
     xml.split(/>\s*</).forEach((node) => {
         if (node.match(/^\/\w/)) indent = indent.substring(tab.length); // decrease indent by one 'tab'
@@ -28,6 +33,25 @@ const formatXML = (xml, tab = '\t') => {
     });
 
     return formatted.substring(1, formatted.length - 3);
-}
+};
 
-module.exports = { getTimestamp, formatXML };
+/**
+ * Checks for Android root permissions, which allows this script to be able
+ * to read Geometry Dash save files.
+ * 
+ * @throws {Error} When no root permissions are found
+ * @returns {void}
+ */
+const checkAndroidRoot = () => {
+    console.log("Checking for root permissions...");
+
+    access("/", constants.R_OK, (e) => {
+        if (e) {
+            throw new Error(
+                `Your device is either not rooted, or you didn't launch the node.js process using 'sudo'. (${e.code})`
+            );
+        }
+    });
+};
+
+module.exports = { getTimestamp, formatXML, checkAndroidRoot };
