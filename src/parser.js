@@ -5,7 +5,7 @@ const Constants = require("./constants");
  */
 class ParserValidationError extends Error {
     constructor() {
-        super("The XMLDocument given is not a valid GD data file.");
+        super("The XMLDocument given is not a valid GD data file, or is a corrupt one.");
         this.name = this.constructor.name;
     }
 }
@@ -20,8 +20,11 @@ class parser {
      * @returns {void}
      */
     validateXML(data) {
-        if (!data || !data.children || !data.children.length)
-            throw new ParserValidationError();
+        if (
+            !data || !data.children ||
+            !data.children.length || !data.children[0].children[0] ||
+            data.children[0].children[0].children[10].innerHTML != "playerUDID"
+        ) throw new ParserValidationError();
     }
 
     /**

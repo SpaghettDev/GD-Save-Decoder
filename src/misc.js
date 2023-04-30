@@ -37,17 +37,15 @@ const formatXML = (xml, tab = '\t') => {
 
 /**
  * Checks for Android root permissions, which allows this script to be able
- * to read Geometry Dash save files.
+ * to read Geometry Dash save files on android.
  * 
  * @throws {Error} When no root permissions are found
- * @returns {void}
+ * @returns {Promise}
  */
-const checkAndroidRoot = () => {
-    console.log("Checking for root permissions...");
-
-    access("/", constants.R_OK, (e) => {
+const checkAndroidRoot = async () => {
+    await access("/", constants.R_OK, (e) => {
         if (e) {
-            throw new Error(
+            new Error(
                 `Your device is either not rooted, or you didn't launch the node.js process using 'sudo'. (${e.code})`
             );
         }

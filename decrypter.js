@@ -31,17 +31,16 @@ let filename = "";
 let gdSave = "";
 
 // match a file path
-if (file.match(/^(.+)(\/|\\)([^\/]+)$/gm))
-{
+if (file.match(/^(.+)(\/|\\)([^\/]+)$/gm)) {
     gdSave = file.replace(/\\/g, "/");
     filename = parsePath(gdSave).name;
 }
-else if (file.match(/CCGameManager(2)?|CCLocalLevels(2)?/g))
-{
+else if (file.match(/CCGameManager(2)?|CCLocalLevels(2)?/g)) {
     if (platform() == "android") {
         console.log(
             "It appears that you are running android, so to be able to read the GD data file,",
-            "your phone must be rooted."
+            "your phone must be rooted.\n",
+            "Checking for root permissions..."
         );
         checkAndroidRoot();
         console.log("Device is rooted! Getting Geometry Dash save file.");
@@ -66,7 +65,6 @@ readFile(gdSave, 'utf8', (err, saveData) => {
     console.log("Decoding...");
     let decoded = crypto.decrypt(saveData);
     if (!decoded) throw new Error("Could not decode file.");
-
     if (!existsSync(dir)) mkdirSync(dir);
 
     let xmlData = new DOMParser().parseFromString(decoded.toString(), 'text/xml');
