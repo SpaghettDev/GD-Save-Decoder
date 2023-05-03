@@ -25,7 +25,7 @@ class parser {
             !data.children.length || !data.children[0].children[0] ||
             data.children[0].children[0].children[10].innerHTML != "playerUDID"
         ) throw new ParserValidationError();
-    }
+    };
 
     /**
      * parse basic values
@@ -56,7 +56,7 @@ class parser {
         });
 
         return res;
-    }
+    };
 
     /**
      * Parses a GD Data value
@@ -74,7 +74,7 @@ class parser {
             case "t": return true;
             case "f": return false;
         }
-    }
+    };
 
     /**
      * Parses GD Data dictionaries
@@ -95,7 +95,7 @@ class parser {
         }
 
         return dictObj;
-    }
+    };
 }
 
 module.exports = parser;

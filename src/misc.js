@@ -1,3 +1,4 @@
+const { deflateSync } = require("zlib");
 const { access, constants } = require("fs");
 
 
@@ -42,14 +43,84 @@ const formatXML = (xml, tab = '\t') => {
  * @throws {Error} When no root permissions are found
  * @returns {Promise}
  */
-const checkAndroidRoot = async () => {
-    await access("/", constants.R_OK, (e) => {
-        if (e) {
-            new Error(
-                `Your device is either not rooted, or you didn't launch the node.js process using 'sudo'. (${e.code})`
-            );
-        }
+const checkAndroidRoot = () => {
+    return new Promise((resolve, reject) => {
+        access("/", constants.R_OK, (e) => {
+            if (e) {
+                reject(
+                    `Your device is either not rooted, or you didn't launch the node.js process using 'sudo'. (${e.code})`
+                );
+            }
+        });
+
+        resolve();
     });
 };
 
-module.exports = { getTimestamp, formatXML, checkAndroidRoot };
+/**
+ * Constructs a CRC table to be used by the CRC32 algorithm
+ * @returns {Number[]}
+ */
+const makeCRCTable = () => {
+    let c;
+    let crcTable = [];
+
+    for (let n =0; n < 256; n++) {
+        c = n;
+
+        for (let k =0; k < 8; k++) c = ((c&1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+
+        crcTable[n] = c;
+    }
+
+    return crcTable;
+}
+
+/**
+ * Applies the CRC32 algorithm to a string
+ * @param {String} str 
+ * @returns {Number}
+ */
+const crc32 = (str) => {
+    let crcTable = makeCRCTable();
+    let crc = 0 ^ (-1);
+
+    for (let i = 0; i < str.length; i++) crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
+
+    return (crc ^ (-1)) >>> 0;
+};
+
+/**
+ * Basically the same as Python's ord() function
+ * 
+ * @param {String} char 
+ * @returns {Number}
+ */
+const getUnicodeDecimal = (char) => {
+    if (char.length > 1) throw new Error("char.length > 1!");
+
+    return parseInt(char.charCodeAt(0), 10);
+};
+
+/**
+ * Deflates a string using zlib's deflateSync and returns the result as a
+ * group of unicode decimals, because JavaScript REALLY likes to turn
+ * escape sequences into characters for some reason...
+ * 
+ * @param {String} str The string to better deflate
+ * @returns {Uint8Array} The better deflated string, as a uint8_t array
+ */
+const betterDeflate = (str) => {
+    let deflated = deflateSync(str).toString("latin1");
+    let buf = new Uint8Array(deflated.length);
+
+    for (let i = 0; i < deflated.length; i++)
+        buf[i] = getUnicodeDecimal(deflated[i]);
+
+    return buf;
+};
+
+module.exports = {
+    getTimestamp, formatXML, checkAndroidRoot,
+    crc32, getUnicodeDecimal, betterDeflate
+};

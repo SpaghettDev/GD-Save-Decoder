@@ -1,4 +1,6 @@
-const { unzipSync, gzipSync } = require("zlib");
+const { unzipSync } = require("zlib");
+const struct = require("python-struct");
+const { crc32, getUnicodeDecimal, betterDeflate } = require("./misc.js");
 
 /**
  * Crypto class. Houses the XOR, decrypt & encrypt functions.
@@ -18,7 +20,7 @@ class crypto {
         for (let i = 0; i < str.length; i++) res += String.fromCodePoint(str[i] ^ key);
 
         return res; 
-    }
+    };
 
     /**
      * Decrypts Geometry Dash .dat files
@@ -38,7 +40,7 @@ class crypto {
         catch (e) {
             throw new Error("Error! GD save file seems to be corrupt!");
         }
-    }
+    };
 
     /**
      * Encrypts an XML file to a Geometry Dash .dat file
@@ -47,14 +49,22 @@ class crypto {
      * @returns {String} the encoded data 
      */
     encrypt(data) {
-        // if (data.startsWith('C?xBJJJJJJJJHyDsy3aE^XcGGXyDqF q]_G^F:Hr\x7F|FJ[H]iAs^JJJJ6')) return data;
+        if (data.startsWith("C?xBJJJJJJJJH<Dsy3aE^XcGGXyDqF&q]_G^F:Hr|FJ[H]iAs^JJJJ6"))
+            return data;
 
-        return this.xor(
-            Buffer.from(
-                gzipSync(data)
-            ).toString('base64'), 11
-        );
-    }
+        const gzipHeader = new Uint8Array([31, 139, 8, 0, 0, 0, 0, 0, 0, 11])
+        const packedStructArr = new Uint8Array(struct.pack("I I", crc32(data), data.length))
+        let compressedData = betterDeflate(data);
+
+        compressedData = Buffer.concat([
+            gzipHeader,
+            compressedData.slice(2, -4),
+            packedStructArr
+        ]);
+
+        let encoded_data = Buffer.from(compressedData).toString("base64").replace(/\+/g, "-").replace(/\//g, "_");
+        return this.xor(encoded_data, 11);
+    };
 }
 
 module.exports = crypto;
