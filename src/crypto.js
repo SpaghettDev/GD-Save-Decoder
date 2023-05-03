@@ -1,6 +1,6 @@
 const { unzipSync } = require("zlib");
 const struct = require("python-struct");
-const { crc32, getUnicodeDecimal, betterDeflate } = require("./misc.js");
+const { crc32, betterDeflate } = require("./misc.js");
 
 /**
  * Crypto class. Houses the XOR, decrypt & encrypt functions.

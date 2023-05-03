@@ -122,5 +122,5 @@ const betterDeflate = (str) => {
 
 module.exports = {
     getTimestamp, formatXML, checkAndroidRoot,
-    crc32, getUnicodeDecimal, betterDeflate
+    crc32, betterDeflate
 };
