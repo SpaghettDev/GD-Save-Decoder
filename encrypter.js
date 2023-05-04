@@ -10,9 +10,13 @@ let pathToFile = argv[0].replace(/\\/g, "/");
 let parsePath = path.parse(pathToFile);
 if (parsePath.ext != ".xml") throw new Error("The file must be an XML file.");
 
-readFile(pathToFile, 'utf8', (err, saveData) => {
+readFile(pathToFile, "utf-8", (err, saveData) => {
     if (err) return console.log(`The file either doesn't exist or is being used by another process. (${err.code})`);
     console.log("Encoding...");
+
+    if (saveData.startsWith("<!-- Prettified -->"))
+        saveData = saveData.replace("<!-- Prettified -->\n", "").replace(/\t/g, "").replace(/\n/g, "");
+
     let encoded = crypto.encrypt(saveData);
 
     if (!existsSync(dir)) mkdirSync(dir);

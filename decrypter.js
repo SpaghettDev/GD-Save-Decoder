@@ -60,24 +60,24 @@ if (!type.match(/xml|pxml|json|rjson/i)) {
     throw new Error("Type to output is not valid!");
 }
 
-readFile(gdSave, 'utf8', (err, saveData) => {
+readFile(gdSave, "utf-8", (err, saveData) => {
     if (err) throw new Error(`The file either doesn't exist or is being used by another process. (${err.code})`);
     console.log("Decoding...");
     let decoded = crypto.decrypt(saveData);
     if (!decoded) throw new Error("Could not decode file.");
     if (!existsSync(dir)) mkdirSync(dir);
 
-    let xmlData = new DOMParser().parseFromString(decoded.toString(), 'text/xml');
+    let xmlData = new DOMParser().parseFromString(decoded.toString(), "text/xml");
 
     parser.validateXML(xmlData);
 
     switch (type) {
         case "xml":
-            writeFileSync(dir + `${filename}-${getTimestamp()}.xml`, decoded.toString(), 'utf8');
+            writeFileSync(dir + `${filename}-${getTimestamp()}.xml`, decoded.toString(), "utf-8");
             break;
 
         case "pxml":
-            writeFileSync(dir + `${filename}-${getTimestamp()}.xml`, formatXML(decoded.toString()), 'utf8');
+            writeFileSync(dir + `${filename}-${getTimestamp()}.xml`, formatXML(decoded.toString()), "utf-8");
             break;
 
         case "json":
@@ -93,7 +93,7 @@ readFile(gdSave, 'utf8', (err, saveData) => {
             writeFileSync(
                 dir + `${filename}-${getTimestamp()}.json`,
                 JSON.stringify(JSONdata, null, '\t'),
-                'utf8'
+                "utf-8"
             );
             break;
     }

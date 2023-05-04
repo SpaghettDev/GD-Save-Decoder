@@ -1,4 +1,3 @@
-const { deflateSync } = require("zlib");
 const { access, constants } = require("fs");
 
 
@@ -18,13 +17,14 @@ const getTimestamp = () => {
 
 /**
  * Formats an XMLDocument without using the XSLTProcessor class since it doesn't exist in node.js
+ * 
  * @param {String} xml the XML document (as a string) to format
  * @param {String?} tab optional, the indentation character to use, default is '\t'
- * 
  * @returns {String} formatted XML document
  * */
 const formatXML = (xml, tab = '\t') => {
-    var formatted = "",
+    const mark = "<!-- Prettified -->\n";
+    let formatted = "",
         indent = "";
 
     xml.split(/>\s*</).forEach((node) => {
@@ -33,7 +33,7 @@ const formatXML = (xml, tab = '\t') => {
         if (node.match(/^<?\w[^>]*[^\/]$/)) indent += tab; // increase indent
     });
 
-    return formatted.substring(1, formatted.length - 3);
+    return mark + formatted.substring(1, formatted.length - 3);
 };
 
 /**
@@ -59,6 +59,7 @@ const checkAndroidRoot = () => {
 
 /**
  * Constructs a CRC table to be used by the CRC32 algorithm
+ * 
  * @returns {Number[]}
  */
 const makeCRCTable = () => {
@@ -78,6 +79,7 @@ const makeCRCTable = () => {
 
 /**
  * Applies the CRC32 algorithm to a string
+ * 
  * @param {String} str 
  * @returns {Number}
  */
@@ -103,24 +105,31 @@ const getUnicodeDecimal = (char) => {
 };
 
 /**
- * Deflates a string using zlib's deflateSync and returns the result as a
- * group of unicode decimals, because JavaScript REALLY likes to turn
- * escape sequences into characters for some reason...
+ * Turns the {@link buf} argument into a Uint8Array
  * 
- * @param {String} str The string to better deflate
- * @returns {Uint8Array} The better deflated string, as a uint8_t array
+ * @param {String|Buffer|Number[]} buf
+ * @returns {Uint8Array}
  */
-const betterDeflate = (str) => {
-    let deflated = deflateSync(str).toString("latin1");
-    let buf = new Uint8Array(deflated.length);
+const toUint8Array = (buf) => {
+    if (typeof buf == "object" && buf.constructor.name == "Buffer")
+        return new Uint8Array(buf);
 
-    for (let i = 0; i < deflated.length; i++)
-        buf[i] = getUnicodeDecimal(deflated[i]);
+    if (
+        typeof buf == "object" &&
+        buf.constructor.name == "Array" &&
+        buf.every(e => typeof e == "number")
+        )
+        return new Uint8Array(buf);
 
-    return buf;
+    let arr = new Uint8Array(buf.length);
+
+    for (i in buf)
+        arr[i] = getUnicodeDecimal(buf[i]);
+
+    return arr;
 };
 
 module.exports = {
     getTimestamp, formatXML, checkAndroidRoot,
-    crc32, betterDeflate
+    crc32, toUint8Array
 };
