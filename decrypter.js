@@ -33,6 +33,10 @@ let gdSave = "";
 // match a file path
 if (file.match(/^(.+)(\/|\\)([^\/]+)$/gm)) {
     gdSave = file.replace(/\\/g, "/");
+
+    if (file.match(/(.*)-\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}/g))
+        file = file.replace(/(.*)-\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}/g, "$1");
+
     filename = parsePath(gdSave).name;
 }
 else if (file.match(/CCGameManager(2)?|CCLocalLevels(2)?/g)) {
@@ -46,24 +50,26 @@ else if (file.match(/CCGameManager(2)?|CCLocalLevels(2)?/g)) {
         console.log("Device is rooted! Getting Geometry Dash save file.");
 
         gdSave = `/data/data/com.robtopx.geometryjump/${file}.dat`;
-        filename = file;
     }
-    else {
+    else if (platform() == "darwin")
+        gdSave = `~/Library/Application Support/GeometryDash/${file}.dat`;
+    else
         gdSave = `${process.env.HOME || process.env.USERPROFILE}/AppData/Local/GeometryDash/${file}.dat`;
-        filename = file;
-    }
+
+    filename = file;
 }
-else throw new Error("File argument is neither a GD save filename nor a path.");
+else
+    throw new Error("File argument is neither a GD save filename nor a path.");
 
 let type = argv[1] ?? "";
 if (!type.match(/xml|pxml|json|rjson/i)) {
     throw new Error("Type to output is not valid!");
 }
 
-readFile(gdSave, "utf-8", (err, saveData) => {
+readFile(gdSave, "binary", async (err, saveData) => {
     if (err) throw new Error(`The file either doesn't exist or is being used by another process. (${err.code})`);
     console.log("Decoding...");
-    let decoded = crypto.decrypt(saveData);
+    let decoded = await crypto.decrypt(saveData);
     if (!decoded) throw new Error("Could not decode file.");
     if (!existsSync(dir)) mkdirSync(dir);
 

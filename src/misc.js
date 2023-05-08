@@ -69,7 +69,8 @@ const makeCRCTable = () => {
     for (let n =0; n < 256; n++) {
         c = n;
 
-        for (let k =0; k < 8; k++) c = ((c&1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+        for (let k =0; k < 8; k++)
+            c = ((c&1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
 
         crcTable[n] = c;
     }
@@ -87,44 +88,40 @@ const crc32 = (str) => {
     let crcTable = makeCRCTable();
     let crc = 0 ^ (-1);
 
-    for (let i = 0; i < str.length; i++) crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
+    for (let i = 0; i < str.length; i++)
+        crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
 
     return (crc ^ (-1)) >>> 0;
 };
 
 /**
- * Basically the same as Python's ord() function
+ * Turns the {@link buffer} argument into a Uint8Array
  * 
- * @param {String} char 
- * @returns {Number}
- */
-const getUnicodeDecimal = (char) => {
-    if (char.length > 1) throw new Error("char.length > 1!");
-
-    return parseInt(char.charCodeAt(0), 10);
-};
-
-/**
- * Turns the {@link buf} argument into a Uint8Array
- * 
- * @param {String|Buffer|Number[]} buf
+ * @param {String|Buffer|ArrayBuffer|Int32Array|Number[]} buffer
  * @returns {Uint8Array}
  */
-const toUint8Array = (buf) => {
-    if (typeof buf == "object" && buf.constructor.name == "Buffer")
-        return new Uint8Array(buf);
+const toUint8Array = (buffer) => {
+    if (typeof buffer == "object" && buffer.constructor.name == "Buffer")
+        return new Uint8Array(buffer);
+
+    if (typeof buffer == "object" && buffer.constructor.name == "ArrayBuffer")
+        return new Uint8Array(buffer);
+
+    if (typeof buffer == "object" && buffer.constructor.name == "Int32Array")
+        return new Uint8Array(buffer);
 
     if (
-        typeof buf == "object" &&
-        buf.constructor.name == "Array" &&
-        buf.every(e => typeof e == "number")
+        typeof buffer == "object" &&
+        buffer.constructor.name == "Array" &&
+        buffer.every(e => typeof e == "number")
         )
-        return new Uint8Array(buf);
+        return new Uint8Array(buffer);
 
-    let arr = new Uint8Array(buf.length);
 
-    for (i in buf)
-        arr[i] = getUnicodeDecimal(buf[i]);
+    let arr = new Uint8Array(buffer.length);
+
+    for (i in buffer)
+        arr[i] = buffer.charCodeAt(i);
 
     return arr;
 };
