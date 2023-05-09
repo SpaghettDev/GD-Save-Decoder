@@ -23,7 +23,7 @@ if (parsedPath.name.match(/(.*)-\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}/g))
     parsedPath.name = parsedPath.name.replace(/(.*)-\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}/g, "$1");
 
 let type = (argv[1] ?? "normal").toLowerCase();
-if (!type.match(/normal|macos/gi)) 
+if (!type.match(/normal|macos/gi))
     throw new Error("Type must be MacOS or normal.");
 
 readFile(pathToFile, "utf-8", (err, saveData) => {
@@ -32,6 +32,8 @@ readFile(pathToFile, "utf-8", (err, saveData) => {
 
     if (saveData.startsWith("<!-- Prettified -->"))
         saveData = saveData.replace("<!-- Prettified -->\n", "").replace(/\t/g, "").replace(/\n/g, "");
+    if (type == "macos")
+        saveData = saveData.replace('<?xml version="1.0"?>', "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>");
 
     let encoded = crypto.encrypt(saveData, type == "macos");
 

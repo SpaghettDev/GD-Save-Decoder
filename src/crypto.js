@@ -37,7 +37,7 @@ class crypto {
      * @param {String} data data to decode, it is xor'd then decoded from base64
      * @returns {Buffer|Error} the decoded data or an error
     */
-    async decrypt(data) {
+    decrypt(data) {
         if (data.startsWith('<?xml version="1.0"?>'))
             return data;
 
