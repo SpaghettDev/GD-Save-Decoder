@@ -69,7 +69,7 @@ if (!type.match(/xml|pxml|json|rjson/i)) {
 readFile(gdSave, "binary", async (err, saveData) => {
     if (err) throw new Error(`The file either doesn't exist or is being used by another process. (${err.code})`);
     console.log("Decoding...");
-    let decoded = await crypto.decrypt(saveData);
+    let decoded = crypto.decrypt(saveData);
     if (!decoded) throw new Error("Could not decode file.");
     if (!existsSync(dir)) mkdirSync(dir);
 
@@ -88,13 +88,13 @@ readFile(gdSave, "binary", async (err, saveData) => {
 
         case "json":
         case "rjson":
-            if (!filename.match(/(CCGameManager(2)?|CCLocalLevels(2)?)(\..*)?/g)) {
+            if (!filename.match(/(CCGameManager(2)?|CCLocalLevels(2)?)(\..*)?/g))
                 console.log(
                     "Outputting to JSON a file other than a GD save file may have",
                     "unintended side-effects, such as weird keys/values..."
                 );
-            }
-            let JSONdata = parser.parseXML(xmlData.children[0].children[0], type == "rjson");
+
+            let JSONdata = parser.parseXML(xmlData, type == "rjson");
 
             writeFileSync(
                 dir + `${filename}-${getTimestamp()}.json`,

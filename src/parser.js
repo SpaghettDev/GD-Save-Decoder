@@ -40,6 +40,8 @@ class parser {
         let raw = {};
         let res = {};
 
+        data = data.children[0].children[0];
+
         for (let i = 0; i < data.children.length; i += 2) {
             let keyName = data.children[i].innerHTML;
 
