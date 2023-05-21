@@ -12,7 +12,10 @@ const {
     checkAndroidRoot
 } = require("./src/misc.js");
 
-DOMParser = new JSDOM().window.DOMParser;
+const JSDOMwindow = new JSDOM().window;
+const DOMParserInst = new JSDOMwindow.DOMParser();
+const XMLSerializerInst = new JSDOMwindow.XMLSerializer();
+
 const crypto = new Crypto();
 const parser = new Parser();
 const dir = `${__dirname.replace(/\\/g, "/")}/decrypted/`;
@@ -20,13 +23,19 @@ const argv = require("minimist")(process.argv.slice(2))._;
 
 if (argv.length == 0) {
     console.log("Decoder usage:");
-    console.log("\tnode ./decoder.js [filepath/filename] [type]");
+    console.log("\tnode ./decoder.js [filepath/filename] [type] (replace_keys)");
     console.log("\t\t[filepath/filename]: either a custom path to a file, or CCGameManager/CCLocalLevels");
     console.log("\t\t[type]: xml (raw), pxml (pretty xml), json or rjson (raw json)");
+    console.log(
+        "\t\t(replace_keys): leave empty to not replace keys with a readable version of them,",
+        "or true to do the opposite"
+    );
     process.exit(0);
 }
 
 let file = argv[0] ?? "";
+let type = argv[1] ?? "";
+let replace_keys = (argv[2] ?? "false").toLowerCase();
 let filename = "";
 let gdSave = "";
 
@@ -61,10 +70,11 @@ else if (file.match(/CCGameManager(2)?|CCLocalLevels(2)?/g)) {
 else
     throw new Error("File argument is neither a GD save filename nor a path.");
 
-let type = argv[1] ?? "";
-if (!type.match(/xml|pxml|json|rjson/i)) {
+if (!type.match(/xml|pxml|json|rjson/i))
     throw new Error("Type to output is not valid!");
-}
+
+if (!replace_keys.match(/true|false/i))
+    throw new Error("replace_keys must be true or false!");
 
 readFile(gdSave, "binary", async (err, saveData) => {
     if (err) throw new Error(`The file either doesn't exist or is being used by another process. (${err.code})`);
@@ -73,18 +83,20 @@ readFile(gdSave, "binary", async (err, saveData) => {
     if (!decoded) throw new Error("Could not decode file.");
     if (!existsSync(dir)) mkdirSync(dir);
 
-    let xmlData = new DOMParser().parseFromString(decoded.toString(), "text/xml");
-
+    let xmlData = DOMParserInst.parseFromString(decoded.toString(), "text/xml");
     parser.validateXML(xmlData);
+
+    if (replace_keys == "true")
+        parser.replaceKeys(xmlData);
 
     switch (type) {
         case "xml":
-            writeFileSync(dir + `${filename}-${getTimestamp()}.xml`, decoded.toString(), "utf-8");
-            break;
+            writeFileSync(dir + `${filename}-${getTimestamp()}.xml`, XMLSerializerInst.serializeToString(xmlData), "utf-8");
+        break;
 
         case "pxml":
-            writeFileSync(dir + `${filename}-${getTimestamp()}.xml`, formatXML(decoded.toString()), "utf-8");
-            break;
+            writeFileSync(dir + `${filename}-${getTimestamp()}.xml`, formatXML(XMLSerializerInst.serializeToString(xmlData)), "utf-8");
+        break;
 
         case "json":
         case "rjson":
@@ -101,7 +113,7 @@ readFile(gdSave, "binary", async (err, saveData) => {
                 JSON.stringify(JSONdata, null, '\t'),
                 "utf-8"
             );
-            break;
+        break;
     }
 
     console.log("Saved!");

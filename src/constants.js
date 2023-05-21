@@ -358,6 +358,31 @@ const constants = {
         "22": "youtubeChest",
         "23": "facebookChest",
         "24": "twitterChest",
+    },
+
+    levelNames: {
+        "0": "Unknown",
+        "1": "Stereo Madness",
+        "2": "Back On Track",
+        "3": "Polargeist",
+        "4": "Dry Out",
+        "5": "Base After Base",
+        "6": "Can't Let Go",
+        "7": "Jumper",
+        "8": "Time Machine",
+        "9": "Cycles",
+        "10": "xStep",
+        "11": "Clutterfunk",
+        "12": "Theory of Everything",
+        "13": "Electroman Adventures",
+        "14": "Clubstep",
+        "15": "Electrodynamix",
+        "16": "Hexagon",
+        "17": "Blast Processing",
+        "18": "Theory of Everything 2",
+        "19": "Geometrical Dominator",
+        "20": "Deadlocked",
+        "21": "Fingerdash"
     }
 }
 

@@ -4,3 +4,7 @@
 
 # vscode debugging files
 /.vscode
+
+# dist stuff
+/dist
+/src/dist

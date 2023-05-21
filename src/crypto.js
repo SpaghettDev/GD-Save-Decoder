@@ -35,7 +35,7 @@ class crypto {
      * Decrypts Geometry Dash .dat files
      * 
      * @param {String} data data to decode, it is xor'd then decoded from base64
-     * @returns {Buffer|Error} the decoded data or an error
+     * @returns {Buffer} the decoded data or an error
     */
     decrypt(data) {
         if (data.startsWith('<?xml version="1.0"?>'))
@@ -49,7 +49,7 @@ class crypto {
                 return unzipSync(decoded);
             }
             catch (e) {
-                throw new Error("Error! GD save file seems to be corrupt!");
+                throw new Error(`GD save file seems to be corrupt! (${e.message})`);
             };
         } else { // Mac
             let decipher = Crypto.createDecipheriv("aes-256-ecb", this.#macOSKey, null);
@@ -98,8 +98,8 @@ class crypto {
             encrypted += cipher.final("binary");
 
             return encrypted;
-        }
+        };
     };
-}
+};
 
 module.exports = crypto;

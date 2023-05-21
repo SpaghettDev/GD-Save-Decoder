@@ -1,6 +1,25 @@
 const Constants = require("./constants");
 
 
+
+/**
+ * Renames {@link obj}'s {@link oldKey} key to {@link newKey}
+ * 
+ * @param {Object} obj 
+ * @param {String} oldKey 
+ * @param {String} newKey 
+ */
+const renameKey = (obj, oldKey, newKey) => {
+    if (oldKey != newKey) {
+        Object.defineProperty(
+            obj,
+            newKey,
+            Object.getOwnPropertyDescriptor(obj, oldKey)
+        );
+        delete obj[oldKey];
+    }
+};
+
 /**
  * Is thrown when an XMLDocument is not a valid decoded GD data file
  */
@@ -24,7 +43,7 @@ class parser {
         if (
             !data || !data.children ||
             !data.children.length || !data.children[0].children[0] ||
-            data.children[0].children[0].children[10].innerHTML != "playerUDID"
+            data.children[0].children[0].children[0].innerHTML != "valueKeeper"
         ) throw new ParserValidationError();
     };
 
@@ -37,7 +56,6 @@ class parser {
      * @returns {Object} parsed data in the form of an object
      * */
     parseXML(data, include_unused) {
-        let raw = {};
         let res = {};
 
         data = data.children[0].children[0];
@@ -49,18 +67,11 @@ class parser {
             if (include_unused && keyName == "[unused]") continue;
 
             let valueTag = data.children[i + 1];
-            if (valueTag.tagName != "d") {
-                let value = this.parseValue(valueTag);
-                res[keyName] = value;
-            }
+            if (valueTag.tagName != "d")
+                res[keyName] = this.parseValue(valueTag);
             else
-                raw[keyName] = valueTag;
+                res[keyName] = this.parseDict(valueTag);
         }
-
-        // parse complex values
-        Object.keys(raw).sort().forEach(x => {
-            res[x] = this.parseDict(raw[x]);
-        });
 
         return res;
     };
@@ -107,6 +118,105 @@ class parser {
 
         return dictObj;
     };
-}
+
+    /**
+     * Replaces keys such as "gv_0001" with "editor.followPlayer", ...
+     * Credit: https://gdcolon.com/gdsave, modified to work with strings instead of
+     * objects since we only parseXML the data when exporting to JSON
+     * 
+     * @param {XMLDocument} data data to replace it's keys with readable ones
+     */
+    replaceKeys(data) {
+        let keyValuePairs = [];
+        data = data.children[0].children[0];
+
+        // extract key names from save, allows to get values
+        // without relying on the save being sorted in a specific wau
+        let keysIndex = Array.from(data.children);
+        keysIndex.forEach((e) => {
+            let ind = keysIndex.indexOf(e);
+
+            keysIndex[ind] = ind % 2 == 0 ? e.innerHTML : null;
+        });
+
+
+        // valueKeeper, contains game settings and unlocked icons
+        keyValuePairs = data.children[keysIndex.indexOf("valueKeeper") + 1].innerHTML.split(/>\s*</g);
+
+        for (let i = 0; i < keyValuePairs.length; i += 2) {
+            let match = keyValuePairs[i].match(/gv_\d{4}/g);
+
+            if (match)
+                keyValuePairs[i] = keyValuePairs[i].replace(/gv_\d{4}/g, Constants.gameVariables[match[0].split("_")[1]] ?? match[0]);
+
+            if (match = (keyValuePairs[i].match(/c0_\d/g)))
+                keyValuePairs[i] = keyValuePairs[i].replace(/c0_(\d+)/g, "primarycolor_$1");
+
+            if (match = (keyValuePairs[i].match(/c1_(\d+)/g)))
+                keyValuePairs[i] = keyValuePairs[i].replace(/c1_(\d+)/g, "secondarycolor_$1");
+
+            if (match = (keyValuePairs[i].match(/i_(\d+)/g)))
+                keyValuePairs[i] = keyValuePairs[i].replace(/i_(\d+)/g, "cube_$1");
+
+            if (match = (keyValuePairs[i].match(/ship_(\d+)/g)))
+                keyValuePairs[i] = keyValuePairs[i].replace(/ship_(\d+)/g, "ship_$1");
+
+            if (match = (keyValuePairs[i].match(/ball_(\d+)/g)))
+                keyValuePairs[i] = keyValuePairs[i].replace(/ball_(\d+)/g, "ball_$1");
+
+            if (match = (keyValuePairs[i].match(/bird_(\d+)/g)))
+                keyValuePairs[i] = keyValuePairs[i].replace(/bird_(\d+)/g, "ufo_$1");
+
+            if (match = (keyValuePairs[i].match(/dart_(\d+)/g)))
+                keyValuePairs[i] = keyValuePairs[i].replace(/dart_(\d+)/g, "wave_$1");
+
+            if (match = (keyValuePairs[i].match(/robot_(\d+)/g)))
+                keyValuePairs[i] = keyValuePairs[i].replace(/robot_(\d+)/g, "robot_$1");
+
+            if (match = (keyValuePairs[i].match(/spider_(\d+)/g)))
+                keyValuePairs[i] = keyValuePairs[i].replace(/spider_(\d+)/g, "spider_$1");
+
+            if (match = (keyValuePairs[i].match(/special_(\d+)/g)))
+                keyValuePairs[i] = keyValuePairs[i].replace(/special_(\d+)/g, "trail_$1");
+
+            if (match = (keyValuePairs[i].match(/death_(\d+)/g)))
+                keyValuePairs[i] = keyValuePairs[i].replace(/death_(\d+)/g, "deatheffect_$1");
+        };
+
+        data.children[keysIndex.indexOf("valueKeeper") + 1].innerHTML = keyValuePairs.join("><");
+
+
+        // unlockValueKeeper, contains game events
+        keyValuePairs = data.children[keysIndex.indexOf("unlockValueKeeper") + 1].innerHTML.split(/>\s*</g);
+
+        for (let i = 0; i < keyValuePairs.length; i += 2)
+            keyValuePairs[i] = keyValuePairs[i].replace(/ugv_(\d+)/g, (_, v) => Constants.gameEvents[v]);
+
+        data.children[keysIndex.indexOf("unlockValueKeeper") + 1].innerHTML = keyValuePairs.join("><");
+
+
+        // stats, contains,... stats
+        keyValuePairs = data.children[keysIndex.indexOf("GS_value") + 1].innerHTML.split(/>\s*</g);
+
+        for (let i = 0; i < keyValuePairs.length; i += 2) {
+            let tag = i == 0 ? "<k>" : "k>"
+            let key = keyValuePairs[i].replace(/<k>|k>/g, "").replace(/<\/k/g, "");
+            let keyName = Constants.statKeys[key] || keyValuePairs[i].replace(/<k>|k>/g, "").replace(/<\/k/g, "");
+
+            if (keyName.includes("unique")) {
+                let coinData = keyName.split("_");
+
+                if (parseInt(coinData[1]) != NaN)
+                    keyValuePairs[i] = `${tag}${
+                        (Constants.levelNames[coinData[1]] ?? Constants.levelNames[0]).replace(/ /g, "-")
+                    }_coin${coinData[1]}</k`;
+            }
+            else
+                keyValuePairs[i] = `${tag}${keyName}</k`;
+        };
+
+        data.children[keysIndex.indexOf("GS_value") + 1].innerHTML = keyValuePairs.join("><");
+    };
+};
 
 module.exports = parser;

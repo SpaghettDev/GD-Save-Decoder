@@ -47,9 +47,10 @@ const checkAndroidRoot = () => {
     return new Promise((resolve, reject) => {
         access("/", constants.R_OK, (e) => {
             if (e) {
-                reject(
-                    `Your device is either not rooted, or you didn't launch the node.js process using 'sudo'. (${e.code})`
-                );
+                reject([
+                    `Your device is either not rooted, or you didn't launch `,
+                    `the node.js process using 'sudo'. (${e.code})`
+                ].join(""));
             }
         });
 
@@ -97,26 +98,20 @@ const crc32 = (str) => {
 /**
  * Turns the {@link buffer} argument into a Uint8Array
  * 
- * @param {String|Buffer|ArrayBuffer|Int32Array|Number[]} buffer
+ * @param {String|Buffer|ArrayBuffer|Int32Array|Uint8Array|Number[]} buffer
  * @returns {Uint8Array}
  */
 const toUint8Array = (buffer) => {
-    if (typeof buffer == "object" && buffer.constructor.name == "Buffer")
-        return new Uint8Array(buffer);
-
-    if (typeof buffer == "object" && buffer.constructor.name == "ArrayBuffer")
-        return new Uint8Array(buffer);
-
-    if (typeof buffer == "object" && buffer.constructor.name == "Int32Array")
-        return new Uint8Array(buffer);
-
-    if (
-        typeof buffer == "object" &&
-        buffer.constructor.name == "Array" &&
-        buffer.every(e => typeof e == "number")
-        )
-        return new Uint8Array(buffer);
-
+    if (typeof buffer == "object") {
+        if ([
+            "Buffer", "ArrayBuffer", "Uint8Array", "Int32Array"
+            ].includes(buffer.constructor.name) ||
+            (
+                buffer.constructor.name == "Array" &&
+                buffer.every(e => typeof e == "number")
+            )
+        ) return new Uint8Array(buffer);
+    };
 
     let arr = new Uint8Array(buffer.length);
 
