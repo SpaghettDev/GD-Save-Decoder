@@ -1,25 +1,6 @@
 const Constants = require("./constants");
 
 
-
-/**
- * Renames {@link obj}'s {@link oldKey} key to {@link newKey}
- * 
- * @param {Object} obj 
- * @param {String} oldKey 
- * @param {String} newKey 
- */
-const renameKey = (obj, oldKey, newKey) => {
-    if (oldKey != newKey) {
-        Object.defineProperty(
-            obj,
-            newKey,
-            Object.getOwnPropertyDescriptor(obj, oldKey)
-        );
-        delete obj[oldKey];
-    }
-};
-
 /**
  * Is thrown when an XMLDocument is not a valid decoded GD data file
  */
