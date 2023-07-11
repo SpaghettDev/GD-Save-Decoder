@@ -23,8 +23,8 @@ class parser {
     validateXML(data) {
         if (
             !data || !data.children ||
-            !data.children.length || !data.children[0].children[0] ||
-            data.children[0].children[0].children[0].innerHTML != "valueKeeper"
+            !data.children.length // || !data.children[0].children[0] ||
+            // data.children[0].children[0].children[0].innerHTML != "valueKeeper"
         ) throw new ParserValidationError();
     };
 
